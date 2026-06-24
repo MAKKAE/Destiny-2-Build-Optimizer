@@ -29,18 +29,3 @@
 - PyInstaller（打包）  
 
 ---
-
-## 项目结构
-
-src/
-│── ui/
-│   ├── main_window.ui
-│   ├── icons/
-│── core/
-│   ├── rules.py
-│   ├── solver.py
-│   ├── model.py
-│── app.py
-requirements.txt
-README.md
-
