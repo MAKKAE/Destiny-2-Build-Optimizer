@@ -1,0 +1,15 @@
+appId: com.makka.d2optimizer
+productName: Destiny2 Build Optimizer
+directories:
+  output: dist
+files:
+  - "../frontend/dist/**/*"
+  - "../backend/**/*"
+  - "main.js"
+  - "preload.js"
+extraResources:
+  - from: "../backend"
+    to: "backend"
+win:
+  target:
+    - nsis
