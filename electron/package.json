@@ -8,9 +8,10 @@
     "dev": "electron .",
     "prebuild": "node scripts/prebuild.js",
     "prebuild:dir": "node scripts/prebuild.js",
+    "build:backend": "node scripts/build-backend.js",
     "build:frontend": "npm run build --prefix ../frontend",
-    "build": "npm run build:frontend && electron-builder --config electron-builder.yml",
-    "build:dir": "npm run build:frontend && electron-builder --dir --config electron-builder.yml"
+    "build": "npm run build:backend && npm run build:frontend && electron-builder --config electron-builder.yml",
+    "build:dir": "npm run build:backend && npm run build:frontend && electron-builder --dir --config electron-builder.yml"
   },
   "devDependencies": {
     "electron": "^30.0.0",

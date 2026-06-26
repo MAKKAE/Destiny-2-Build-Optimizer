@@ -55,8 +55,9 @@ app.whenReady().then(async () => {
   } catch (err) {
     console.error("[electron] Failed to start:", err);
     const detail =
-      err?.message?.includes("Backend did not start")
-        ? "无法启动 Python 后端。请确认已安装 Python 3，并执行：\n\npip install -r backend/requirements.txt"
+      err?.message?.includes("Backend did not start") ||
+      err?.message?.includes("Bundled backend not found")
+        ? "无法启动内置后端服务。请尝试重新安装应用，或联系开发者。"
         : String(err?.message || err);
     showStartupError("Destiny 2 Build Optimizer 启动失败", detail);
     app.quit();

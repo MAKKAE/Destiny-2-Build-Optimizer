@@ -50,7 +50,7 @@ Destiny-2-Build-Optimizer/
 | Python | 3.10+ |
 | npm | 9+ |
 
-打包后的桌面应用仍依赖系统已安装的 Python（用于运行内嵌后端）。后续可用 PyInstaller 进一步打包为独立可执行文件。
+打包后的桌面应用**无需用户安装 Python**——后端由 PyInstaller 打包为 `d2-backend.exe` 并随安装包分发。开发时仍需本机 Python。
 
 ## 开发模式
 
@@ -146,11 +146,11 @@ npm run dev:electron   # 启动 Electron
 # 1. 构建前端
 cd frontend && npm install && npm run build
 
-# 2. 打包 Electron（会自动先构建前端）
+# 2. 打包 Electron（自动构建 PyInstaller 后端 + 前端）
 cd ../electron && npm install && npm run build
 ```
 
-产物位于 `electron/dist/`。
+产物位于 `electron/release/`。
 
 也可在根目录执行：
 
@@ -161,8 +161,9 @@ npm run build
 ### 打包说明
 
 - 前端静态文件：`frontend/dist/` 打入 asar
-- 后端源码：`backend/` 复制到 `resources/backend/`
-- 应用启动时由 `backend-launcher.js` 执行 `python -m uvicorn main:app`
+- 后端可执行文件：`backend/dist/d2-backend/` 由 PyInstaller 生成，复制到 `resources/backend/`
+- 应用启动时由 `backend-launcher.js` 运行内置 `d2-backend.exe`（开发模式仍用 `python -m uvicorn`）
+- 打包前需在本机安装：`pip install -r backend/requirements-build.txt`
 - Windows 生成 NSIS 安装包，支持自定义安装目录
 
 ## 项目模板
