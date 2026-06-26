@@ -26,6 +26,7 @@ frontend/.env.*
 # Electron
 electron/node_modules/
 electron/dist/
+electron/release/
 electron/out/
 electron/build/
 electron/*.log

@@ -1,15 +1,51 @@
 appId: com.makka.d2optimizer
-productName: Destiny2 Build Optimizer
+productName: Destiny 2 Build Optimizer
+copyright: Copyright © 2026 Makka
+icon: build/icon.ico
+
 directories:
-  output: dist
+  output: release
+  buildResources: build
+
 files:
-  - "../frontend/dist/**/*"
-  - "../backend/**/*"
-  - "main.js"
-  - "preload.js"
+  - main.js
+  - preload.js
+  - backend-launcher.js
+  - package.json
+  - from: "../frontend/dist"
+    to: "frontend/dist"
+    filter:
+      - "**/*"
+
 extraResources:
   - from: "../backend"
     to: "backend"
+    filter:
+      - "**/*"
+      - "!**/__pycache__/**"
+      - "!**/*.pyc"
+
+asar: true
+
 win:
   target:
-    - nsis
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-${version}-Setup.${ext}"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  shortcutName: "${productName}"
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.utilities
+
+linux:
+  target:
+    - AppImage
+  category: Utility

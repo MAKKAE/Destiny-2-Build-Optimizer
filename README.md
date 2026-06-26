@@ -1,119 +1,181 @@
 # Destiny 2 Build Optimizer — Desktop Edition
 
-本项目是一个基于 Vue3、FastAPI 和 Electron 的命运 2 配装计算器桌面应用。
-前端负责 UI，后端负责属性计算，Electron 提供桌面壳。
+基于 **Vue 3 + FastAPI + Electron** 的命运 2 配装计算器桌面应用。
+
+- **前端**：负责 UI、收集计算条件、展示后端返回的方案数组
+- **后端**：负责属性规则与求解逻辑（当前为简化占位实现，可在此扩展完整规则）
+- **Electron**：桌面壳；生产模式下自动启动内嵌后端
 
 ## 功能特性
 
-1. 前后端分离架构
-2. Vue3 + Ant Design Vue 现代化 UI
-3. FastAPI 高性能 API
-4. Electron 打包成跨平台桌面应用
-5. 求解器结构可扩展（支持 OR‑Tools）
-6. 清晰的模块化代码结构
+1. 前后端分离，接口清晰
+2. Vue 3 + Ant Design Vue 统一 UI 风格
+3. FastAPI 求解 API（`/solve`）
+4. Electron 一键打包为 Windows / macOS / Linux 安装包
+5. 求解器模块化（`rules` / `model` / `solver` / `formatter`），可扩展 OR-Tools
 
 ## 项目结构
 
+```
 Destiny-2-Build-Optimizer/
-│
-├── backend/
-│   ├── main.py
+├── backend/                 # FastAPI 后端
+│   ├── main.py              # 路由入口
 │   ├── requirements.txt
-│   ├── solver/
-│   │   ├── rules.py
-│   │   ├── model.py
-│   │   ├── solver.py
-│
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── index.html
+│   └── solver/
+│       ├── rules.py         # 游戏规则与静态数据
+│       ├── model.py         # 数据结构
+│       ├── solver.py        # 求解逻辑（在此扩展）
+│       └── formatter.py     # 内部结果 → 前端展示格式
+├── frontend/                # Vue 3 前端
 │   ├── src/
-│   │   ├── main.js
-│   │   ├── App.vue
-│   │   ├── api/
-│   │   ├── pages/
-│   ├── dist/
-│
-├── electron/
-│   ├── package.json
+│   │   ├── api/             # 请求封装
+│   │   ├── config/          # 前端静态配置
+│   │   ├── pages/           # 页面
+│   │   └── styles/          # 全局样式
+│   └── vite.config.js       # 开发代理 /api → 8000
+├── electron/                # Electron 桌面壳
 │   ├── main.js
 │   ├── preload.js
-│   ├── electron-builder.yml
-│
-└── README.md
+│   ├── backend-launcher.js  # 生产模式启动 Python 后端
+│   └── electron-builder.yml
+├── project-template/        # 可复制的项目脚手架模板
+└── package.json             # 根目录便捷脚本
+```
 
-## 开发模式启动方式
+## 环境要求
 
-### 1. 启动后端（FastAPI）
+| 组件 | 版本建议 |
+|------|----------|
+| Node.js | 18+ |
+| Python | 3.10+ |
+| npm | 9+ |
 
+打包后的桌面应用仍依赖系统已安装的 Python（用于运行内嵌后端）。后续可用 PyInstaller 进一步打包为独立可执行文件。
+
+## 开发模式
+
+### 方式一：分别启动（推荐）
+
+**终端 1 — 后端**
+
+```bash
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --reload
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
 
-后端地址：
-http://127.0.0.1:8000
+**终端 2 — 前端**
 
-### 2. 启动前端（Vue3）
-
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
-前端地址：
-http://localhost:5173
+浏览器访问 http://localhost:5173（Vite 会将 `/api` 代理到后端）。
 
-### 3. 启动 Electron（桌面壳）
+**终端 3 — Electron（可选）**
 
+```bash
 cd electron
 npm install
 npm run dev
+```
 
-Electron 会加载前端开发服务器。
+### 方式二：根目录脚本
 
-## 生产模式（打包桌面应用）
+```bash
+npm run dev:backend    # 启动 FastAPI
+npm run dev:frontend   # 启动 Vite
+npm run dev:electron   # 启动 Electron
+```
 
-### 1. 构建前端
+## API 说明
 
-cd frontend
+### `POST /solve`
+
+请求体（与前端 `Optimizer.vue` 中 payload 一致）：
+
+```json
+{
+  "targets": [{ "id": "hp", "target": 100, "priority": 1 }],
+  "modSettings": {
+    "isMasterworked": false,
+    "useMods": true,
+    "useBlessing": false,
+    "useArtifice": false
+  },
+  "slotLocks": [
+    { "slot": "head", "locked": true, "frameworkId": "expert", "randomAttr": "super" }
+  ]
+}
+```
+
+响应：
+
+```json
+{
+  "success": true,
+  "solutions": [
+    {
+      "id": 1,
+      "conversionCount": 0,
+      "priorityResults": [...],
+      "slots": [...]
+    }
+  ]
+}
+```
+
+### 其他
+
+- `GET /health` — 健康检查
+- `GET /config` — 后端静态配置（可选，前端目前使用本地 `config.js`）
+
+## 扩展求解逻辑
+
+1. 在 `backend/solver/rules.py` 中维护游戏规则（与前端 `config.js` 保持一致）
+2. 在 `backend/solver/solver.py` 的 `EquipSolver.solve()` 中实现完整搜索 / 约束求解
+3. 如需调整返回字段，修改 `backend/solver/formatter.py`
+
+当前求解器为**简化占位实现**：按优先级选属性、应用模组加成，返回单个方案。完整配装算法请在此目录自行扩展。
+
+## 生产打包
+
+```bash
+# 1. 构建前端
+cd frontend && npm install && npm run build
+
+# 2. 打包 Electron（会自动先构建前端）
+cd ../electron && npm install && npm run build
+```
+
+产物位于 `electron/dist/`。
+
+也可在根目录执行：
+
+```bash
 npm run build
+```
 
-构建产物位于：
-frontend/dist/
+### 打包说明
 
-### 2. Electron 加载静态文件
+- 前端静态文件：`frontend/dist/` 打入 asar
+- 后端源码：`backend/` 复制到 `resources/backend/`
+- 应用启动时由 `backend-launcher.js` 执行 `python -m uvicorn main:app`
+- Windows 生成 NSIS 安装包，支持自定义安装目录
 
-Electron 会自动加载：
-frontend/dist/index.html
+## 项目模板
 
-### 3. 打包 Electron 应用
-
-cd electron
-npm run build
-
-打包产物位于：
-electron/dist/
-
-## 求解器说明
-
-求解器位于 backend/solver/ 目录下，包含：
-
-rules.py：属性规则
-model.py：数据结构
-solver.py：求解逻辑
-
-可扩展内容包括：
-
-属性计算
-模组逻辑
-转换规则
-OR‑Tools 约束求解
+同仓库下的 [`project-template/`](./project-template/) 目录提供可复制的脚手架，结构与本文档一致，可用于快速启动其他 Vue + FastAPI + Electron 项目。详见模板内 README。
 
 ## 技术栈
 
-前端：Vue3、Vite、Ant Design Vue、Axios
-后端：FastAPI、Pydantic、OR‑Tools（可选）
-桌面端：Electron
+| 层级 | 技术 |
+|------|------|
+| 前端 | Vue 3、Vite、Ant Design Vue、Axios |
+| 后端 | FastAPI、Pydantic、Uvicorn、OR-Tools（可选） |
+| 桌面 | Electron、electron-builder |
 
 ## 许可证
 

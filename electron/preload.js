@@ -1,1 +1,6 @@
-// 预留，将来需要与渲染进程通信时再扩展
+const { contextBridge } = require("electron");
+
+contextBridge.exposeInMainWorld("electronAPI", {
+  isElectron: true,
+  backendUrl: "http://127.0.0.1:8000",
+});
